@@ -39,7 +39,7 @@ var config = {
     // include: ['*', '**/*'],      // this would upload everything except dot files
     include: ['*.php', 'dist/*'],
     exclude: ['dist/**/*.map'],     // e.g. exclude sourcemaps - ** exclude: [] if nothing to exclude **
-    deleteRemote: ['/cache/*'],     // e.g. delete everything in the cache directory - ** deleteRemote: false or [] to not delete anything **
+    deleteRemote: ['cache/'],     // e.g. delete everything in the cache directory - ** deleteRemote: false or [] to not delete anything **
     forcePasv: true                 // Passive mode is forced (EPSV command is not sent)
 }
 
