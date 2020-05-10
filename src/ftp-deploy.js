@@ -9,7 +9,7 @@ const fs = require("fs");
 var PromiseFtp = require("promise-ftp");
 const lib = require("./lib");
 
-/* interim structure 
+/* interim structure
 {
     '/': ['test-inside-root.txt'],
     'folderA': ['test-inside-a.txt'],
@@ -116,6 +116,32 @@ const FtpDeployer = function () {
         return Promise.resolve(config);
     };
 
+    this.rename = config => {
+        if (config.renameRemote) {
+            if (!Array.isArray(config.renameRemote)) {
+                throw new Error('v must be an array');
+            }
+
+            return Promise.mapSeries(config.renameRemote, pair => {
+                this.emit("log", "Renaming file: " + config.remoteRoot + pair[0] + ' -> ' +  pair[1]);
+
+                return this.ftp
+                    .rename(pair[0], pair[1])
+                    .then(() => {
+                        this.emit("renamed", this.eventObject);
+                        return Promise.resolve("renamed " + pair[0] + ' -> ' +  pair[1]);
+                    })
+                    .catch(err => {
+                        this.eventObject["error"] = err;
+                        this.emit("rename-error", this.eventObject);
+                        // if continue on error....
+                        return Promise.reject(err);
+                    });
+            }).then(() => config);
+        }
+        return Promise.resolve(config);
+    };
+
     this.deploy = function (config, cb) {
         return lib
             .checkIncludes(config)
@@ -123,6 +149,7 @@ const FtpDeployer = function () {
             .then(this.connect)
             .then(this.deleteRemote)
             .then(this.checkLocalAndUpload)
+            .then(this.rename)
             .then(res => {
                 this.ftp.end();
                 if (typeof cb == "function") {
